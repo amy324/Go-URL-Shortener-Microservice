@@ -57,7 +57,7 @@ func main() {
 
 	// Load environment variables
 	os.Getenv("REDIS_STRING")
-	 os.Getenv("REDIS_PASSWORD")
+	os.Getenv("REDIS_PASSWORD")
 
 	// Initialize the Gorilla Mux router
 	router := mux.NewRouter()
@@ -70,7 +70,10 @@ func main() {
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "URL shortener microservice is live")
 	})
-
+	// Handler for favicon.ico requests - prevents 404 error as server sometimes makes favicon request 
+	router.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
 
 	// Start the HTTP server
 	port := ":8080"
@@ -78,55 +81,52 @@ func main() {
 	log.Fatal(http.ListenAndServe(port, router))
 }
 
-
-
 func shortenURLHandler(w http.ResponseWriter, r *http.Request) {
-    // Parse the JSON request body to get the long URL
-    var requestBody struct {
-        URL string `json:"url"`
-    }
-    err := json.NewDecoder(r.Body).Decode(&requestBody)
-    if err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        log.Printf("Error parsing request body: %v", err)
-        return
-    }
+	// Parse the JSON request body to get the long URL
+	var requestBody struct {
+		URL string `json:"url"`
+	}
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		log.Printf("Error parsing request body: %v", err)
+		return
+	}
 
-    // Get the long URL from the request body
-    longURL := requestBody.URL
+	// Get the long URL from the request body
+	longURL := requestBody.URL
 
-    // Generate short URL
-    shortURL := generateShortURL(longURL)
+	// Generate short URL
+	shortURL := generateShortURL(longURL)
 
-    // Store the mapping in Redis
-    err = storeURLMapping(redisClient, shortURL, longURL)
-    if err != nil {
-        http.Error(w, "Failed to store URL mapping", http.StatusInternalServerError)
-        log.Printf("Error storing URL mapping in Redis: %v", err)
-        return
-    }
+	// Store the mapping in Redis
+	err = storeURLMapping(redisClient, shortURL, longURL)
+	if err != nil {
+		http.Error(w, "Failed to store URL mapping", http.StatusInternalServerError)
+		log.Printf("Error storing URL mapping in Redis: %v", err)
+		return
+	}
 
-    // Return both short URL and long URL in the response
-    jsonResponse := struct {
-        ShortURL string `json:"short_url"`
-        LongURL  string `json:"long_url"`
-    }{
-        ShortURL: shortURL,
-        LongURL:  longURL,
-    }
-    jsonResp, err := json.Marshal(jsonResponse)
-    if err != nil {
-        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-        log.Printf("Error marshalling JSON response: %v", err)
-        return
-    }
-    w.Header().Set("Content-Type", "application/json")
-    w.WriteHeader(http.StatusOK)
-    w.Write(jsonResp)
+	// Return both short URL and long URL in the response
+	jsonResponse := struct {
+		ShortURL string `json:"short_url"`
+		LongURL  string `json:"long_url"`
+	}{
+		ShortURL: shortURL,
+		LongURL:  longURL,
+	}
+	jsonResp, err := json.Marshal(jsonResponse)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Error marshalling JSON response: %v", err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResp)
 
-    log.Printf("Shortened URL created: %s -> %s", longURL, shortURL)
+	log.Printf("Shortened URL created: %s -> %s", longURL, shortURL)
 }
-
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the short URL from the request path
@@ -146,5 +146,3 @@ func redirectHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, longURL, http.StatusFound)
 	log.Printf("Redirecting to long URL: %s", longURL)
 }
-
-
