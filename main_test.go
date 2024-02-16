@@ -39,7 +39,7 @@ func TestShortenURLHandler(t *testing.T) {
 
 func TestRedirectHandler(t *testing.T) {
     // Create a new request with a GET method and a URL with a short URL parameter
-    req, err := http.NewRequest("GET", "/d75277cd", nil)
+    req, err := http.NewRequest("GET", "/c984d06a", nil)
     if err != nil {
         t.Fatal(err)
     }

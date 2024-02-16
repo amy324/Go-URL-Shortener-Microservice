@@ -66,6 +66,12 @@ func main() {
 	router.HandleFunc("/shorten", shortenURLHandler).Methods("POST")
 	router.HandleFunc("/{shortURL}", redirectHandler).Methods("GET")
 
+	//Handler for checking if the microservice is live
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "URL shortener microservice is live")
+	})
+
+
 	// Start the HTTP server
 	port := ":8080"
 	fmt.Printf("Server is running on port %s...\n", port)
