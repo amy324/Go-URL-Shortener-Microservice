@@ -70,6 +70,18 @@ go test
 
 The tests ensure that the URL shortening and redirection functionalities work as expected and handle different scenarios correctly.
 
+The outcome of the test should be:
+```
+$ go test
+Connected to Redis
+2024/02/16 15:23:16 Shortened URL created: https://example.com -> c984d06a
+2024/02/16 15:23:16 Redirect requested for short URL: c984d06a
+2024/02/16 15:23:16 Retrieved long URL from Redis for short URL c984d06a: https://example.com
+2024/02/16 15:23:16 Redirecting to long URL: https://example.com
+PASS
+ok      shortener       1.814s
+```
+
 ## Dependencies
 
 This project relies on the following external dependencies:
